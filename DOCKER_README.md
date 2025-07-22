@@ -1,7 +1,7 @@
 # MT5 Docker API
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/jefrnc/mt5-docker-api)](https://hub.docker.com/r/jefrnc/mt5-docker-api)
-[![Docker Image Size](https://img.shields.io/docker/image-size/jefrnc/mt5-docker-api)](https://hub.docker.com/r/jefrnc/mt5-docker-api)
+[![Docker Pulls](https://img.shields.io/docker/pulls/jsfrnc/mt5-docker-api)](https://hub.docker.com/r/jsfrnc/mt5-docker-api)
+[![Docker Image Size](https://img.shields.io/docker/image-size/jsfrnc/mt5-docker-api)](https://hub.docker.com/r/jsfrnc/mt5-docker-api)
 [![GitHub](https://img.shields.io/github/license/jefrnc/mt5-docker-api)](https://github.com/jefrnc/mt5-docker-api)
 
 Run MetaTrader5 in Docker with Web VNC access and REST API.
@@ -16,7 +16,7 @@ docker run -d \
   -v mt5_data:/config \
   -e CUSTOM_USER=trader \
   -e PASSWORD=secure_password \
-  jefrnc/mt5-docker-api:latest
+  jsfrnc/mt5-docker-api:latest
 ```
 
 ## Access Points

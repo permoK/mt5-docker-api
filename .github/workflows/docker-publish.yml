@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 env:
-  DOCKER_HUB_USERNAME: jefrnc
+  DOCKER_HUB_USERNAME: jsfrnc
   IMAGE_NAME: mt5-docker-api
 
 jobs:
@@ -126,3 +126,35 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
           repository: ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}
           readme-filepath: ./README.md
+
+  create-release:
+    needs: [build, security-scan]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          body: |
+            ## Docker Image
+            
+            ```bash
+            docker pull ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+            ```
+            
+            ## What's Changed
+            
+            See [full changelog](https://github.com/${{ github.repository }}/compare/previous...${{ github.ref_name }})
+            
+            ## Docker Hub
+            
+            View on Docker Hub: https://hub.docker.com/r/${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}
+          draft: false
+          prerelease: false

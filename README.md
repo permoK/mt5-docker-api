@@ -1,8 +1,8 @@
 # MetaTrader5 Docker API
 
 [![Docker Build](https://github.com/jefrnc/mt5-docker-api/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/jefrnc/mt5-docker-api/actions/workflows/docker-publish.yml)
-[![Docker Pulls](https://img.shields.io/docker/pulls/jefrnc/mt5-docker-api)](https://hub.docker.com/r/jefrnc/mt5-docker-api)
-[![Docker Image Size](https://img.shields.io/docker/image-size/jefrnc/mt5-docker-api)](https://hub.docker.com/r/jefrnc/mt5-docker-api)
+[![Docker Pulls](https://img.shields.io/docker/pulls/jsfrnc/mt5-docker-api)](https://hub.docker.com/r/jsfrnc/mt5-docker-api)
+[![Docker Image Size](https://img.shields.io/docker/image-size/jsfrnc/mt5-docker-api)](https://hub.docker.com/r/jsfrnc/mt5-docker-api)
 [![License](https://img.shields.io/github/license/jefrnc/mt5-docker-api)](LICENSE.md)
 
 A containerized solution for running MetaTrader5 trading platform with web-based VNC access and Python API support.

@@ -1,0 +1,90 @@
+name: Release Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate version format
+        run: |
+          if ! [[ "${{ inputs.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: Version must be in format X.Y.Z"
+            exit 1
+          fi
+
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Create and push tag
+        run: |
+          git tag -a "v${{ inputs.version }}" -m "Release version ${{ inputs.version }}"
+          git push origin "v${{ inputs.version }}"
+
+      - name: Wait for Docker build
+        run: |
+          echo "Waiting for Docker build workflow to start..."
+          sleep 30
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ inputs.version }}
+          release_name: v${{ inputs.version }}
+          body: |
+            ## 🚀 Release v${{ inputs.version }}
+            
+            ### Docker Image
+            
+            Pull the latest version:
+            ```bash
+            docker pull jsfrnc/mt5-docker-api:${{ inputs.version }}
+            ```
+            
+            Or use Docker Compose:
+            ```bash
+            wget https://raw.githubusercontent.com/jefrnc/mt5-docker-api/v${{ inputs.version }}/docker-compose.yml
+            docker-compose up -d
+            ```
+            
+            ### Quick Start
+            
+            ```bash
+            docker run -d \
+              -p 3000:3000 \
+              -p 8000:8000 \
+              -p 8001:8001 \
+              -v mt5_data:/config \
+              -e CUSTOM_USER=trader \
+              -e PASSWORD=secure_password \
+              jsfrnc/mt5-docker-api:${{ inputs.version }}
+            ```
+            
+            ### Access Points
+            - Web VNC: http://localhost:3000
+            - REST API: http://localhost:8000/docs
+            - MT5 Python: localhost:8001
+            
+            ### Documentation
+            - [Full Documentation](https://github.com/jefrnc/mt5-docker-api#readme)
+            - [Docker Hub](https://hub.docker.com/r/jsfrnc/mt5-docker-api)
+            
+            ### What's Changed
+            See [full changelog](https://github.com/jefrnc/mt5-docker-api/commits/v${{ inputs.version }})
+          draft: false
+          prerelease: false
