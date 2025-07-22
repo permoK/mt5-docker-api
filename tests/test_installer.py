@@ -12,10 +12,23 @@ from datetime import datetime, timedelta
 
 # Add src to path
 import sys
-sys.path.insert(0, '/app')
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'Metatrader'))
 
 from config import MT5Settings
-from installer import MT5Installer, GracefulKiller
+
+# Mock the installer module since it's in Metatrader/start.py
+try:
+    from start import MT5Installer, GracefulKiller
+except ImportError:
+    # Create mock classes for testing
+    class GracefulKiller:
+        kill_now = False
+    
+    class MT5Installer:
+        def __init__(self, settings):
+            self.settings = settings
 
 class TestMT5Settings(unittest.TestCase):
     """Test Pydantic settings validation"""

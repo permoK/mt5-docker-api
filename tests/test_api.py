@@ -7,11 +7,13 @@ from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime
 from fastapi.testclient import TestClient
 import sys
+import os
 
 # Add src to path
-sys.path.insert(0, '../src/api')
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src', 'api'))
 
-from main import app, AccountInfo, SymbolInfo, OrderRequest, OrderResponse
+from api.main import app, AccountInfo, SymbolInfo, OrderRequest, OrderResponse
 
 class TestMT5API(unittest.TestCase):
     """Test FastAPI endpoints"""
