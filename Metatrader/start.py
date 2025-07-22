@@ -20,7 +20,7 @@ from datetime import datetime, timedelta
 
 # Agregar el directorio de la app al path
 sys.path.append('/app')
-from settings import settings
+from config import settings
 
 # Configurar logging
 logging.basicConfig(
