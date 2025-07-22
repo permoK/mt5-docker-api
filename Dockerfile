@@ -26,10 +26,11 @@ RUN dpkg --add-architecture i386 && \
 # Copy requirements file
 COPY requirements.txt /tmp/requirements.txt
 
-# Install Python packages from requirements and mt5linux separately
+# Install Python packages from requirements
+# Note: mt5linux is installed separately and may fail on some architectures
 RUN pip install --no-cache-dir -r /tmp/requirements.txt && \
-    pip install --no-cache-dir mt5linux==0.1.* && \
-    rm /tmp/requirements.txt
+    rm /tmp/requirements.txt && \
+    (pip install --no-cache-dir mt5linux==0.1.* || echo "Warning: mt5linux installation failed, will try MetaTrader5 package in Wine")
 
 # Environment variables
 ENV WINEPREFIX=/config/.wine
@@ -38,15 +39,14 @@ ENV WINEDEBUG=-all
 ENV DISPLAY=:1
 
 # Create directories
-RUN mkdir -p /app /config /scripts
+RUN mkdir -p /app /config
 
 # Copy application files
 COPY src/ /app/
-COPY scripts/ /scripts/
 COPY Metatrader/ /Metatrader/
 
 # Make scripts executable
-RUN chmod +x /Metatrader/*.py /scripts/*.sh 2>/dev/null || true
+RUN chmod +x /Metatrader/*.py 2>/dev/null || true
 
 # Supervisor configuration
 RUN mkdir -p /var/log/supervisor && \
@@ -63,7 +63,7 @@ autorestart=true\n\
 startretries=10\n\
 \n\
 [program:novnc]\n\
-command=/usr/share/novnc/utils/launch.sh --vnc localhost:5900 --listen 3000\n\
+command=websockify --web=/usr/share/novnc/ 3000 localhost:5900\n\
 autorestart=true\n\
 \n\
 [program:mt5]\n\
@@ -86,9 +86,8 @@ EXPOSE 3000 8000 8001
 # Volume
 VOLUME /config
 
-# Use entrypoint script
-COPY scripts/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# Set working directory
+WORKDIR /app
 
-# Start with entrypoint
-ENTRYPOINT ["/entrypoint.sh"]
+# Start supervisor
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

@@ -49,12 +49,24 @@ mt5_client = None
 async def lifespan(app: FastAPI):
     """Manage MT5 connection lifecycle"""
     global mt5_client
-    mt5_client = MetaTrader5(host="localhost", port=18812)
-    if not mt5_client.initialize():
-        logger.error("Failed to initialize MT5 connection")
+    if MT5_AVAILABLE and MetaTrader5:
+        try:
+            mt5_client = MetaTrader5(host="localhost", port=18812)
+            if not mt5_client.initialize():
+                logger.error("Failed to initialize MT5 connection")
+                mt5_client = None
+        except Exception as e:
+            logger.error(f"Failed to create MT5 client: {e}")
+            mt5_client = None
+    else:
+        logger.warning("MetaTrader5 module not available, API will run in limited mode")
+        mt5_client = None
     yield
     if mt5_client:
-        mt5_client.shutdown()
+        try:
+            mt5_client.shutdown()
+        except Exception:
+            pass
 
 
 # Create FastAPI app
