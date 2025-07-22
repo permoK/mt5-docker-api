@@ -23,7 +23,7 @@ try:
     import MetaTrader5 as mt5_constants
 except ImportError:
     # Crear constantes dummy para que la API funcione
-    class mt5_constants:
+    class MT5Constants:
         ORDER_TYPE_BUY = 0
         ORDER_TYPE_SELL = 1
         TRADE_ACTION_DEAL = 1
@@ -37,6 +37,8 @@ except ImportError:
         TIMEFRAME_D1 = 16408
         TIMEFRAME_W1 = 32769
         TIMEFRAME_MN1 = 49153
+    
+    mt5_constants = MT5Constants
 
 
 logger = logging.getLogger(__name__)
