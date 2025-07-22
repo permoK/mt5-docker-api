@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  mt5:
+    build: 
+      context: .
+      args:
+        BUILD_DATE: ${BUILD_DATE:-latest}
+        VERSION: ${VERSION:-latest}
+    image: metatrader5_vnc:latest
+    container_name: mt5
+    restart: unless-stopped
+    
+    volumes:
+      - mt5_config:/config
+      - mt5_logs:/var/log
+      
+    ports:
+      - "${VNC_PORT:-3000}:3000"
+      - "${MT5_PORT:-8001}:8001"
+      
+    environment:
+      # Basic configuration
+      - CUSTOM_USER=${CUSTOM_USER}
+      - PASSWORD=${PASSWORD}
+      
+      # MT5 configuration
+      - MT5_PORT=${MT5_PORT:-8001}
+      - MT5_VERSION=${MT5_VERSION:-5.0.36}
+      - WINE_VERSION=${WINE_VERSION:-win10}
+      
+      # Timeouts and retries
+      - DOWNLOAD_TIMEOUT=${DOWNLOAD_TIMEOUT:-300}
+      - MAX_RETRIES=${MAX_RETRIES:-3}
+      
+      # Logging
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      
+    env_file:
+      - .env
+      
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 300s
+      
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+          
+    networks:
+      - mt5_network
+      
+    security_opt:
+      - no-new-privileges:true
+      
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETUID
+      - SETGID
+      
+volumes:
+  mt5_config:
+    driver: local
+  mt5_logs:
+    driver: local
+    
+networks:
+  mt5_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
