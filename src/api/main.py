@@ -13,6 +13,7 @@ from contextlib import asynccontextmanager
 
 try:
     from mt5linux import MetaTrader5
+
     MT5_AVAILABLE = True
 except ImportError:
     MT5_AVAILABLE = False
@@ -37,6 +38,7 @@ except ImportError:
         TIMEFRAME_W1 = 32769
         TIMEFRAME_MN1 = 49153
 
+
 logger = logging.getLogger(__name__)
 
 # Global MT5 connection
@@ -47,19 +49,20 @@ mt5_client = None
 async def lifespan(app: FastAPI):
     """Manage MT5 connection lifecycle"""
     global mt5_client
-    mt5_client = MetaTrader5(host='localhost', port=18812)
+    mt5_client = MetaTrader5(host="localhost", port=18812)
     if not mt5_client.initialize():
         logger.error("Failed to initialize MT5 connection")
     yield
     if mt5_client:
         mt5_client.shutdown()
 
+
 # Create FastAPI app
 app = FastAPI(
     title="MetaTrader5 API",
     description="REST API for MetaTrader5 trading operations",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # CORS middleware
@@ -110,6 +113,7 @@ class OrderRequest(BaseModel):
     magic: int = 0
     comment: str = "API Order"
 
+
 class OrderResponse(BaseModel):
     ticket: int
     symbol: str
@@ -119,12 +123,14 @@ class OrderResponse(BaseModel):
     profit: float = 0.0
     status: str
 
+
 class HistoryRequest(BaseModel):
     symbol: str
     timeframe: str = "M1"  # M1, M5, M15, M30, H1, H4, D1, W1, MN1
     start: datetime
     end: datetime
     count: Optional[int] = 1000
+
 
 class Candle(BaseModel):
     time: datetime
@@ -135,16 +141,19 @@ class Candle(BaseModel):
     volume: int
     spread: int
 
+
 # Health check
 @app.get("/health")
 async def health_check():
     """Check API and MT5 connection health"""
     mt5_status = mt5_client.terminal_info() if mt5_client else None
+
     return {
         "status": "healthy" if mt5_status else "unhealthy",
         "mt5_connected": bool(mt5_status),
-        "terminal_info": mt5_status._asdict() if mt5_status else None
+        "terminal_info": mt5_status._asdict() if mt5_status else None,
     }
+
 
 # Account endpoints
 @app.get("/account", response_model=AccountInfo)
@@ -152,11 +161,11 @@ async def get_account_info():
     """Get current account information"""
     if not mt5_client:
         raise HTTPException(status_code=503, detail="MT5 not connected")
-    
+
     account = mt5_client.account_info()
     if not account:
         raise HTTPException(status_code=404, detail="Account info not available")
-    
+
     return AccountInfo(
         login=account.login,
         server=account.server,
@@ -167,8 +176,9 @@ async def get_account_info():
         leverage=account.leverage,
         currency=account.currency,
         name=account.name,
-        company=account.company
+        company=account.company,
     )
+
 
 # Symbol endpoints
 @app.get("/symbols")
@@ -176,27 +186,28 @@ async def get_symbols():
     """Get all available trading symbols"""
     if not mt5_client:
         raise HTTPException(status_code=503, detail="MT5 not connected")
-    
+
     symbols = mt5_client.symbols_get()
     if not symbols:
         return []
-    
+
     return [s.name for s in symbols if s.visible]
+
 
 @app.get("/symbol/{symbol}", response_model=SymbolInfo)
 async def get_symbol_info(symbol: str):
     """Get detailed information about a symbol"""
     if not mt5_client:
         raise HTTPException(status_code=503, detail="MT5 not connected")
-    
+
     info = mt5_client.symbol_info(symbol)
     if not info:
         raise HTTPException(status_code=404, detail=f"Symbol {symbol} not found")
-    
+
     tick = mt5_client.symbol_info_tick(symbol)
     if not tick:
         raise HTTPException(status_code=404, detail=f"No tick data for {symbol}")
-    
+
     return SymbolInfo(
         name=info.name,
         description=info.description,
@@ -207,8 +218,9 @@ async def get_symbol_info(symbol: str):
         trade_contract_size=info.trade_contract_size,
         volume_min=info.volume_min,
         volume_max=info.volume_max,
-        volume_step=info.volume_step
+        volume_step=info.volume_step,
     )
+
 
 # Trading endpoints
 @app.post("/order", response_model=OrderResponse)
@@ -216,16 +228,20 @@ async def place_order(request: OrderRequest):
     """Place a new trading order"""
     if not mt5_client:
         raise HTTPException(status_code=503, detail="MT5 not connected")
-    
+
     # Prepare order request
     symbol_info = mt5_client.symbol_info(request.symbol)
     if not symbol_info:
-        raise HTTPException(status_code=404, detail=f"Symbol {request.symbol} not found")
-    
+        raise HTTPException(
+            status_code=404, detail=f"Symbol {request.symbol} not found"
+        )
+
     tick = mt5_client.symbol_info_tick(request.symbol)
     if not tick:
-        raise HTTPException(status_code=404, detail=f"No tick data for {request.symbol}")
-    
+        raise HTTPException(
+            status_code=404, detail=f"No tick data for {request.symbol}"
+        )
+
     # Determine order type and price
     if request.order_type.upper() == "BUY":
         order_type = mt5_constants.ORDER_TYPE_BUY
@@ -235,7 +251,7 @@ async def place_order(request: OrderRequest):
         price = tick.bid
     else:
         raise HTTPException(status_code=400, detail="Invalid order type")
-    
+
     # Create order request
     order_request = {
         "action": mt5_constants.TRADE_ACTION_DEAL,
@@ -247,38 +263,39 @@ async def place_order(request: OrderRequest):
         "magic": request.magic,
         "comment": request.comment,
     }
-    
+
     if request.sl:
         order_request["sl"] = request.sl
     if request.tp:
         order_request["tp"] = request.tp
-    
+
     # Send order
     result = mt5_client.order_send(order_request)
-    
+
     if not result or result.retcode != mt5_constants.TRADE_RETCODE_DONE:
         error_msg = result.comment if result else "Order failed"
         raise HTTPException(status_code=400, detail=error_msg)
-    
+
     return OrderResponse(
         ticket=result.order,
         symbol=request.symbol,
         volume=request.volume,
         price=result.price,
         order_type=request.order_type,
-        status="executed"
+        status="executed",
     )
+
 
 @app.get("/positions")
 async def get_positions():
     """Get all open positions"""
     if not mt5_client:
         raise HTTPException(status_code=503, detail="MT5 not connected")
-    
+
     positions = mt5_client.positions_get()
     if not positions:
         return []
-    
+
     return [
         {
             "ticket": pos.ticket,
@@ -292,47 +309,53 @@ async def get_positions():
             "tp": pos.tp,
             "time": pos.time,
             "magic": pos.magic,
-            "comment": pos.comment
+            "comment": pos.comment,
         }
         for pos in positions
     ]
+
 
 @app.delete("/position/{ticket}")
 async def close_position(ticket: int):
     """Close a specific position"""
     if not mt5_client:
         raise HTTPException(status_code=503, detail="MT5 not connected")
-    
+
     position = mt5_client.positions_get(ticket=ticket)
     if not position:
         raise HTTPException(status_code=404, detail="Position not found")
-    
+
     position = position[0]
-    
+
     # Prepare close request
     tick = mt5_client.symbol_info_tick(position.symbol)
     if not tick:
         raise HTTPException(status_code=404, detail="No tick data")
-    
+
     close_request = {
         "action": mt5_constants.TRADE_ACTION_DEAL,
         "position": ticket,
         "symbol": position.symbol,
         "volume": position.volume,
-        "type": mt5_constants.ORDER_TYPE_SELL if position.type == 0 else mt5_constants.ORDER_TYPE_BUY,
+        "type": (
+            mt5_constants.ORDER_TYPE_SELL
+            if position.type == 0
+            else mt5_constants.ORDER_TYPE_BUY
+        ),
         "price": tick.bid if position.type == 0 else tick.ask,
         "deviation": 20,
         "magic": position.magic,
-        "comment": f"Close position {ticket}"
+        "comment": f"Close position {ticket}",
     }
-    
+
     result = mt5_client.order_send(close_request)
-    
+
     if not result or result.retcode != mt5_constants.TRADE_RETCODE_DONE:
         error_msg = result.comment if result else "Failed to close position"
         raise HTTPException(status_code=400, detail=error_msg)
-    
+
     return {"status": "closed", "ticket": ticket}
+
 
 # History endpoints
 @app.post("/history/candles", response_model=List[Candle])
@@ -340,7 +363,7 @@ async def get_candles(request: HistoryRequest):
     """Get historical candle data"""
     if not mt5_client:
         raise HTTPException(status_code=503, detail="MT5 not connected")
-    
+
     # Convert timeframe
     timeframe_map = {
         "M1": mt5_constants.TIMEFRAME_M1,
@@ -353,70 +376,72 @@ async def get_candles(request: HistoryRequest):
         "W1": mt5_constants.TIMEFRAME_W1,
         "MN1": mt5_constants.TIMEFRAME_MN1,
     }
-    
+
     timeframe = timeframe_map.get(request.timeframe.upper())
     if not timeframe:
         raise HTTPException(status_code=400, detail="Invalid timeframe")
-    
+
     # Get rates
     rates = mt5_client.copy_rates_range(
-        request.symbol,
-        timeframe,
-        request.start,
-        request.end
+        request.symbol, timeframe, request.start, request.end
     )
-    
+
     if rates is None:
         return []
-    
+
     # Limit results if specified
     if request.count and len(rates) > request.count:
-        rates = rates[-request.count:]
-    
+        rates = rates[-request.count :]
+
     return [
         Candle(
-            time=datetime.fromtimestamp(rate['time']),
-            open=rate['open'],
-            high=rate['high'],
-            low=rate['low'],
-            close=rate['close'],
-            volume=rate['tick_volume'],
-            spread=rate['spread']
+            time=datetime.fromtimestamp(rate["time"]),
+            open=rate["open"],
+            high=rate["high"],
+            low=rate["low"],
+            close=rate["close"],
+            volume=rate["tick_volume"],
+            spread=rate["spread"],
         )
         for rate in rates
     ]
+
 
 # WebSocket for real-time data
 @app.websocket("/ws/ticks/{symbol}")
 async def websocket_ticks(websocket: WebSocket, symbol: str):
     """WebSocket endpoint for real-time tick data"""
     await websocket.accept()
-    
+
     try:
         while True:
             if not mt5_client:
                 await websocket.send_json({"error": "MT5 not connected"})
                 break
-            
+
             tick = mt5_client.symbol_info_tick(symbol)
             if tick:
-                await websocket.send_json({
-                    "symbol": symbol,
-                    "time": datetime.now().isoformat(),
-                    "bid": tick.bid,
-                    "ask": tick.ask,
-                    "last": tick.last,
-                    "volume": tick.volume
-                })
-            
+                await websocket.send_json(
+                    {
+                        "symbol": symbol,
+                        "time": datetime.now().isoformat(),
+                        "bid": tick.bid,
+                        "ask": tick.ask,
+                        "last": tick.last,
+                        "volume": tick.volume,
+                    }
+                )
+
             await asyncio.sleep(0.5)  # Send updates every 500ms
-            
+
     except WebSocketDisconnect:
         logger.info(f"WebSocket disconnected for {symbol}")
     except Exception as e:
         logger.error(f"WebSocket error: {e}")
         await websocket.close()
 
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
