@@ -12,8 +12,9 @@ from datetime import datetime
 # Add src to path
 import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'Metatrader'))
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "Metatrader"))
 
 from config import MT5Settings  # noqa: E402
 import signal  # noqa: E402
@@ -75,7 +76,7 @@ class TestMT5Settings(unittest.TestCase):
 class TestGracefulKiller(unittest.TestCase):
     """Test signal handling"""
 
-    @patch('signal.signal')
+    @patch("signal.signal")
     def test_signal_registration(self, mock_signal):
         """Test that signals are registered"""
         # Check both SIGINT and SIGTERM are registered
@@ -100,9 +101,7 @@ class TestMT5Installer(unittest.TestCase):
         """Set up test fixtures"""
         self.temp_dir = tempfile.mkdtemp()
         self.settings = MT5Settings(
-            wine_prefix=f"{self.temp_dir}/.wine",
-            cache_enabled=True,
-            cache_ttl_days=7
+            wine_prefix=f"{self.temp_dir}/.wine", cache_enabled=True, cache_ttl_days=7
         )
 
         # Create installer with settings
@@ -115,7 +114,9 @@ class TestMT5Installer(unittest.TestCase):
     def test_cache_dir_creation(self):
         """Test cache directory is created"""
         self.assertTrue(self.installer.cache_dir.exists())
-        self.assertEqual(self.installer.cache_dir, Path(f"{self.temp_dir}/.wine").parent / ".cache")
+        self.assertEqual(
+            self.installer.cache_dir, Path(f"{self.temp_dir}/.wine").parent / ".cache"
+        )
 
     def test_calculate_checksum(self):
         """Test checksum calculation"""
@@ -156,7 +157,7 @@ class TestMT5Installer(unittest.TestCase):
         url = "http://test.com/file.exe"
         metadata = {
             "timestamp": datetime.now().isoformat(),
-            "checksum": "test_checksum"
+            "checksum": "test_checksum",
         }
 
         self.installer._save_cache_metadata(url, metadata)
@@ -164,13 +165,13 @@ class TestMT5Installer(unittest.TestCase):
 
         self.assertEqual(loaded, metadata)
 
-    @patch('requests.Session.get')
+    @patch("requests.Session.get")
     def test_download_file_success(self, mock_get):
         """Test successful file download"""
         # Mock response
         mock_response = Mock()
-        mock_response.headers = {'content-length': '100'}
-        mock_response.iter_content = Mock(return_value=[b'test data'])
+        mock_response.headers = {"content-length": "100"}
+        mock_response.iter_content = Mock(return_value=[b"test data"])
         mock_response.raise_for_status = Mock()
         mock_get.return_value = mock_response
 
@@ -179,9 +180,9 @@ class TestMT5Installer(unittest.TestCase):
 
         self.assertTrue(result)
         self.assertTrue(dest.exists())
-        self.assertEqual(dest.read_bytes(), b'test data')
+        self.assertEqual(dest.read_bytes(), b"test data")
 
-    @patch('requests.Session.get')
+    @patch("requests.Session.get")
     def test_download_file_with_cache(self, mock_get):
         """Test download uses cache when available"""
         # Create cached file
@@ -190,10 +191,9 @@ class TestMT5Installer(unittest.TestCase):
         cache_file.write_text("cached content")
 
         # Save recent cache metadata
-        self.installer._save_cache_metadata(url, {
-            "timestamp": datetime.now().isoformat(),
-            "checksum": "test"
-        })
+        self.installer._save_cache_metadata(
+            url, {"timestamp": datetime.now().isoformat(), "checksum": "test"}
+        )
 
         dest = Path(self.temp_dir) / "downloaded.exe"
         result = self.installer.download_file(url, dest)
@@ -213,26 +213,19 @@ class TestMT5Installer(unittest.TestCase):
         self.assertFalse(result)
         self.assertFalse(dest.exists())
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_run_command_success(self, mock_run):
         """Test successful command execution"""
-        mock_run.return_value = Mock(
-            stdout="output",
-            stderr="",
-            returncode=0
-        )
+        mock_run.return_value = Mock(stdout="output", stderr="", returncode=0)
 
         result = self.installer.run_command(["echo", "test"])
 
         self.assertIsNotNone(result)
         mock_run.assert_called_once_with(
-            ["echo", "test"],
-            check=True,
-            capture_output=True,
-            text=True
+            ["echo", "test"], check=True, capture_output=True, text=True
         )
 
-    @patch('subprocess.Popen')
+    @patch("subprocess.Popen")
     def test_run_command_background(self, mock_popen):
         """Test background command execution"""
         mock_process = Mock()
@@ -249,14 +242,14 @@ class TestMT5Installer(unittest.TestCase):
         mono_path = Path(self.settings.wine_prefix) / "drive_c" / "windows" / "mono"
         mono_path.mkdir(parents=True)
 
-        with patch.object(self.installer, 'download_file') as mock_download:
+        with patch.object(self.installer, "download_file") as mock_download:
             self.installer.install_mono()
 
         # Should not download if already installed
         mock_download.assert_not_called()
 
-    @patch.object(MT5Installer, 'download_file')
-    @patch.object(MT5Installer, 'run_command')
+    @patch.object(MT5Installer, "download_file")
+    @patch.object(MT5Installer, "run_command")
     def test_install_mono_fresh(self, mock_run, mock_download):
         """Test fresh mono installation"""
         mock_download.return_value = True
@@ -295,5 +288,5 @@ class TestMT5Installer(unittest.TestCase):
         proc2.terminate.assert_not_called()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

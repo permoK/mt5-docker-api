@@ -17,15 +17,15 @@ class MT5Settings(BaseSettings):
     # URLs de descarga
     mono_url: str = Field(
         default="https://dl.winehq.org/wine/wine-mono/8.0.0/wine-mono-8.0.0-x86.msi",
-        env="MONO_URL"
+        env="MONO_URL",
     )
     python_url: str = Field(
         default="https://www.python.org/ftp/python/3.9.0/python-3.9.0.exe",
-        env="PYTHON_URL"
+        env="PYTHON_URL",
     )
     mt5_download_url: str = Field(
         default="https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe",
-        env="MT5_DOWNLOAD_URL"
+        env="MT5_DOWNLOAD_URL",
     )
 
     # Configuración VNC
@@ -35,8 +35,7 @@ class MT5Settings(BaseSettings):
 
     # Python packages
     required_packages: List[str] = Field(
-        default=["MetaTrader5==5.0.36", "mt5linux", "pyxdg"],
-        env="REQUIRED_PACKAGES"
+        default=["MetaTrader5==5.0.36", "mt5linux", "pyxdg"], env="REQUIRED_PACKAGES"
     )
 
     # Timeouts y reintentos
@@ -54,24 +53,24 @@ class MT5Settings(BaseSettings):
     download_chunk_size: int = Field(default=8192, gt=0, env="DOWNLOAD_CHUNK_SIZE")
     startup_timeout: int = Field(default=300, gt=0, env="STARTUP_TIMEOUT")
 
-    @validator('password')
+    @validator("password")
     def password_strength(cls, v):
         if v and len(v) < 8:
-            raise ValueError('Password must be at least 8 characters')
+            raise ValueError("Password must be at least 8 characters")
         return v
 
-    @validator('wine_version')
+    @validator("wine_version")
     def validate_wine_version(cls, v):
         allowed = ["win10", "win7", "winxp"]
         if v not in allowed:
-            raise ValueError(f'Wine version must be one of {allowed}')
+            raise ValueError(f"Wine version must be one of {allowed}")
         return v
 
-    @validator('log_level')
+    @validator("log_level")
     def validate_log_level(cls, v):
         allowed = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
         if v.upper() not in allowed:
-            raise ValueError(f'Log level must be one of {allowed}')
+            raise ValueError(f"Log level must be one of {allowed}")
         return v.upper()
 
     def get_cache_dir(self) -> Path:

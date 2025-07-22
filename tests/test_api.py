@@ -9,8 +9,8 @@ import sys
 import os
 
 # Add src to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src', 'api'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src", "api"))
 
 from api.main import app, AccountInfo, OrderRequest  # noqa: E402
 
@@ -26,7 +26,7 @@ class TestMT5API(unittest.TestCase):
         self.mock_mt5 = Mock()
 
         # Patch global mt5_client
-        patcher = patch('api.main.mt5_client', self.mock_mt5)
+        patcher = patch("api.main.mt5_client", self.mock_mt5)
         patcher.start()
         self.addCleanup(patcher.stop)
 
@@ -101,7 +101,11 @@ class TestMT5API(unittest.TestCase):
         mock_symbol3.name = "HIDDEN"
         mock_symbol3.visible = False
 
-        self.mock_mt5.symbols_get.return_value = [mock_symbol1, mock_symbol2, mock_symbol3]
+        self.mock_mt5.symbols_get.return_value = [
+            mock_symbol1,
+            mock_symbol2,
+            mock_symbol3,
+        ]
 
         response = self.client.get("/symbols")
 
@@ -171,16 +175,16 @@ class TestMT5API(unittest.TestCase):
         self.mock_mt5.order_send.return_value = mock_result
 
         # Mock constants
-        with patch('api.main.mt5_constants.ORDER_TYPE_BUY', 0), \
-             patch('api.main.mt5_constants.TRADE_ACTION_DEAL', 1), \
-             patch('api.main.mt5_constants.TRADE_RETCODE_DONE', 10009):
+        with patch("api.main.mt5_constants.ORDER_TYPE_BUY", 0), patch(
+            "api.main.mt5_constants.TRADE_ACTION_DEAL", 1
+        ), patch("api.main.mt5_constants.TRADE_RETCODE_DONE", 10009):
 
             order_request = {
                 "symbol": "EURUSD",
                 "volume": 0.1,
                 "order_type": "BUY",
                 "sl": 1.0950,
-                "tp": 1.1050
+                "tp": 1.1050,
             }
 
             response = self.client.post("/order", json=order_request)
@@ -193,11 +197,7 @@ class TestMT5API(unittest.TestCase):
 
     def test_place_order_invalid_type(self):
         """Test placing order with invalid type"""
-        order_request = {
-            "symbol": "EURUSD",
-            "volume": 0.1,
-            "order_type": "INVALID"
-        }
+        order_request = {"symbol": "EURUSD", "volume": 0.1, "order_type": "INVALID"}
 
         response = self.client.post("/order", json=order_request)
 
@@ -253,34 +253,34 @@ class TestMT5API(unittest.TestCase):
         """Test getting historical candles"""
         mock_rates = [
             {
-                'time': 1234567890,
-                'open': 1.1000,
-                'high': 1.1010,
-                'low': 1.0990,
-                'close': 1.1005,
-                'tick_volume': 100,
-                'spread': 10
+                "time": 1234567890,
+                "open": 1.1000,
+                "high": 1.1010,
+                "low": 1.0990,
+                "close": 1.1005,
+                "tick_volume": 100,
+                "spread": 10,
             },
             {
-                'time': 1234567950,
-                'open': 1.1005,
-                'high': 1.1015,
-                'low': 1.1000,
-                'close': 1.1010,
-                'tick_volume': 150,
-                'spread': 12
-            }
+                "time": 1234567950,
+                "open": 1.1005,
+                "high": 1.1015,
+                "low": 1.1000,
+                "close": 1.1010,
+                "tick_volume": 150,
+                "spread": 12,
+            },
         ]
 
         self.mock_mt5.copy_rates_range.return_value = mock_rates
 
         # Mock constants
-        with patch('api.main.mt5_constants.TIMEFRAME_M1', 1):
+        with patch("api.main.mt5_constants.TIMEFRAME_M1", 1):
             request_data = {
                 "symbol": "EURUSD",
                 "timeframe": "M1",
                 "start": "2024-01-01T00:00:00",
-                "end": "2024-01-01T01:00:00"
+                "end": "2024-01-01T01:00:00",
             }
 
             response = self.client.post("/history/candles", json=request_data)
@@ -297,7 +297,7 @@ class TestMT5API(unittest.TestCase):
             "symbol": "EURUSD",
             "timeframe": "INVALID",
             "start": "2024-01-01T00:00:00",
-            "end": "2024-01-01T01:00:00"
+            "end": "2024-01-01T01:00:00",
         }
 
         response = self.client.post("/history/candles", json=request_data)
@@ -325,7 +325,7 @@ class TestAPIModels(unittest.TestCase):
             margin=100.0,
             free_margin=10400.0,
             leverage=100,
-            currency="USD"
+            currency="USD",
         )
 
         self.assertEqual(account.login, 12345)
@@ -334,11 +334,7 @@ class TestAPIModels(unittest.TestCase):
 
     def test_order_request_model(self):
         """Test OrderRequest model validation"""
-        order = OrderRequest(
-            symbol="EURUSD",
-            volume=0.1,
-            order_type="BUY"
-        )
+        order = OrderRequest(symbol="EURUSD", volume=0.1, order_type="BUY")
 
         self.assertEqual(order.symbol, "EURUSD")
         self.assertEqual(order.volume, 0.1)
@@ -355,7 +351,7 @@ class TestAPIModels(unittest.TestCase):
             sl=1.1050,
             tp=1.0950,
             magic=12345,
-            comment="Test order"
+            comment="Test order",
         )
 
         self.assertEqual(order.sl, 1.1050)
@@ -364,5 +360,5 @@ class TestAPIModels(unittest.TestCase):
         self.assertEqual(order.comment, "Test order")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

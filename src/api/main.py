@@ -13,6 +13,7 @@ from contextlib import asynccontextmanager
 
 try:
     from mt5linux import MetaTrader5
+
     MT5_AVAILABLE = True
 except ImportError:
     MT5_AVAILABLE = False
@@ -37,6 +38,7 @@ except ImportError:
         TIMEFRAME_W1 = 32769
         TIMEFRAME_MN1 = 49153
 
+
 logger = logging.getLogger(__name__)
 
 # Global MT5 connection
@@ -47,19 +49,20 @@ mt5_client = None
 async def lifespan(app: FastAPI):
     """Manage MT5 connection lifecycle"""
     global mt5_client
-    mt5_client = MetaTrader5(host='localhost', port=18812)
+    mt5_client = MetaTrader5(host="localhost", port=18812)
     if not mt5_client.initialize():
         logger.error("Failed to initialize MT5 connection")
     yield
     if mt5_client:
         mt5_client.shutdown()
 
+
 # Create FastAPI app
 app = FastAPI(
     title="MetaTrader5 API",
     description="REST API for MetaTrader5 trading operations",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # CORS middleware
@@ -148,7 +151,7 @@ async def health_check():
     return {
         "status": "healthy" if mt5_status else "unhealthy",
         "mt5_connected": bool(mt5_status),
-        "terminal_info": mt5_status._asdict() if mt5_status else None
+        "terminal_info": mt5_status._asdict() if mt5_status else None,
     }
 
 
@@ -173,7 +176,7 @@ async def get_account_info():
         leverage=account.leverage,
         currency=account.currency,
         name=account.name,
-        company=account.company
+        company=account.company,
     )
 
 
@@ -215,7 +218,7 @@ async def get_symbol_info(symbol: str):
         trade_contract_size=info.trade_contract_size,
         volume_min=info.volume_min,
         volume_max=info.volume_max,
-        volume_step=info.volume_step
+        volume_step=info.volume_step,
     )
 
 
@@ -229,11 +232,15 @@ async def place_order(request: OrderRequest):
     # Prepare order request
     symbol_info = mt5_client.symbol_info(request.symbol)
     if not symbol_info:
-        raise HTTPException(status_code=404, detail=f"Symbol {request.symbol} not found")
+        raise HTTPException(
+            status_code=404, detail=f"Symbol {request.symbol} not found"
+        )
 
     tick = mt5_client.symbol_info_tick(request.symbol)
     if not tick:
-        raise HTTPException(status_code=404, detail=f"No tick data for {request.symbol}")
+        raise HTTPException(
+            status_code=404, detail=f"No tick data for {request.symbol}"
+        )
 
     # Determine order type and price
     if request.order_type.upper() == "BUY":
@@ -275,7 +282,7 @@ async def place_order(request: OrderRequest):
         volume=request.volume,
         price=result.price,
         order_type=request.order_type,
-        status="executed"
+        status="executed",
     )
 
 
@@ -302,7 +309,7 @@ async def get_positions():
             "tp": pos.tp,
             "time": pos.time,
             "magic": pos.magic,
-            "comment": pos.comment
+            "comment": pos.comment,
         }
         for pos in positions
     ]
@@ -330,11 +337,15 @@ async def close_position(ticket: int):
         "position": ticket,
         "symbol": position.symbol,
         "volume": position.volume,
-        "type": mt5_constants.ORDER_TYPE_SELL if position.type == 0 else mt5_constants.ORDER_TYPE_BUY,
+        "type": (
+            mt5_constants.ORDER_TYPE_SELL
+            if position.type == 0
+            else mt5_constants.ORDER_TYPE_BUY
+        ),
         "price": tick.bid if position.type == 0 else tick.ask,
         "deviation": 20,
         "magic": position.magic,
-        "comment": f"Close position {ticket}"
+        "comment": f"Close position {ticket}",
     }
 
     result = mt5_client.order_send(close_request)
@@ -372,10 +383,7 @@ async def get_candles(request: HistoryRequest):
 
     # Get rates
     rates = mt5_client.copy_rates_range(
-        request.symbol,
-        timeframe,
-        request.start,
-        request.end
+        request.symbol, timeframe, request.start, request.end
     )
 
     if rates is None:
@@ -383,17 +391,17 @@ async def get_candles(request: HistoryRequest):
 
     # Limit results if specified
     if request.count and len(rates) > request.count:
-        rates = rates[-request.count:]
+        rates = rates[-request.count :]
 
     return [
         Candle(
-            time=datetime.fromtimestamp(rate['time']),
-            open=rate['open'],
-            high=rate['high'],
-            low=rate['low'],
-            close=rate['close'],
-            volume=rate['tick_volume'],
-            spread=rate['spread']
+            time=datetime.fromtimestamp(rate["time"]),
+            open=rate["open"],
+            high=rate["high"],
+            low=rate["low"],
+            close=rate["close"],
+            volume=rate["tick_volume"],
+            spread=rate["spread"],
         )
         for rate in rates
     ]
@@ -413,14 +421,16 @@ async def websocket_ticks(websocket: WebSocket, symbol: str):
 
             tick = mt5_client.symbol_info_tick(symbol)
             if tick:
-                await websocket.send_json({
-                    "symbol": symbol,
-                    "time": datetime.now().isoformat(),
-                    "bid": tick.bid,
-                    "ask": tick.ask,
-                    "last": tick.last,
-                    "volume": tick.volume
-                })
+                await websocket.send_json(
+                    {
+                        "symbol": symbol,
+                        "time": datetime.now().isoformat(),
+                        "bid": tick.bid,
+                        "ask": tick.ask,
+                        "last": tick.last,
+                        "volume": tick.volume,
+                    }
+                )
 
             await asyncio.sleep(0.5)  # Send updates every 500ms
 
@@ -433,4 +443,5 @@ async def websocket_ticks(websocket: WebSocket, symbol: str):
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
