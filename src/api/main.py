@@ -12,8 +12,31 @@ import json
 import logging
 from contextlib import asynccontextmanager
 
-from mt5linux import MetaTrader5
-import MetaTrader5 as mt5_constants
+try:
+    from mt5linux import MetaTrader5
+    MT5_AVAILABLE = True
+except ImportError:
+    MT5_AVAILABLE = False
+    MetaTrader5 = None
+
+try:
+    import MetaTrader5 as mt5_constants
+except ImportError:
+    # Crear constantes dummy para que la API funcione
+    class mt5_constants:
+        ORDER_TYPE_BUY = 0
+        ORDER_TYPE_SELL = 1
+        TRADE_ACTION_DEAL = 1
+        TRADE_RETCODE_DONE = 10009
+        TIMEFRAME_M1 = 1
+        TIMEFRAME_M5 = 5
+        TIMEFRAME_M15 = 15
+        TIMEFRAME_M30 = 30
+        TIMEFRAME_H1 = 16385
+        TIMEFRAME_H4 = 16388
+        TIMEFRAME_D1 = 16408
+        TIMEFRAME_W1 = 32769
+        TIMEFRAME_MN1 = 49153
 
 logger = logging.getLogger(__name__)
 

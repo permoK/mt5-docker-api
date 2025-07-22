@@ -20,7 +20,31 @@ from datetime import datetime, timedelta
 
 # Agregar el directorio de la app al path
 sys.path.append('/app')
-from config import settings
+
+try:
+    from config import settings
+except ImportError:
+    # Usar configuración por defecto si no existe config.py
+    class DefaultSettings:
+        wine_prefix = os.environ.get('WINEPREFIX', '/config/.wine')
+        mt5_port = int(os.environ.get('MT5_PORT', '8001'))
+        log_level = os.environ.get('LOG_LEVEL', 'INFO')
+        max_retries = 3
+        download_timeout = 300
+        cache_enabled = True
+        cache_ttl_days = 7
+        mono_url = "https://dl.winehq.org/wine/wine-mono/8.0.0/wine-mono-8.0.0-x86.msi"
+        python_url = "https://www.python.org/ftp/python/3.9.0/python-3.9.0.exe"
+        mt5_download_url = "https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe"
+        required_packages = ["MetaTrader5==5.0.36", "mt5linux", "pyxdg"]
+        
+        def get_cache_dir(self):
+            return Path(self.wine_prefix).parent / ".cache"
+        
+        def dict(self):
+            return {k: v for k, v in self.__dict__.items() if not k.startswith('_')}
+    
+    settings = DefaultSettings()
 
 # Configurar logging
 logging.basicConfig(

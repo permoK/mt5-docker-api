@@ -89,5 +89,9 @@ EXPOSE 3000 8000 8001
 # Volume
 VOLUME /config
 
-# Start supervisor
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# Use entrypoint script
+COPY scripts/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Start with entrypoint
+ENTRYPOINT ["/entrypoint.sh"]
