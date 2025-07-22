@@ -37,7 +37,7 @@ except ImportError:
         TIMEFRAME_D1 = 16408
         TIMEFRAME_W1 = 32769
         TIMEFRAME_MN1 = 49153
-    
+
     mt5_constants = MT5Constants
 
 
