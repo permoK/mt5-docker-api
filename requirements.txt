@@ -6,7 +6,7 @@ urllib3==2.2.*
 
 # API dependencies
 fastapi==0.104.*
-uvicorn[standard]==0.24.*
+uvicorn[standard]==0.35.*
 websockets==15.0.1
 
 # MT5 dependencies
