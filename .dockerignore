@@ -1,0 +1,49 @@
+# Git
+.git
+.gitignore
+.github
+
+# Development
+.devcontainer
+.env
+.env.example
+*.log
+*.pyc
+__pycache__
+.pytest_cache
+.coverage
+.mypy_cache
+
+# Documentation
+README.md
+DOCKER_README.md
+LICENSE.md
+docs/
+
+# Testing
+tests/
+docker-compose.test.yml
+*_test.py
+*_test.go
+
+# Scripts and tools
+scripts/
+Metatrader/start_basic.py
+
+# Docker files (not needed in build context)
+docker-compose.yml
+docker-compose.yaml
+docker/
+
+# Config directories (will be created at runtime)
+config/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
