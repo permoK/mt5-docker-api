@@ -23,7 +23,7 @@ try:
     import MetaTrader5 as mt5_constants
 except ImportError:
     # Crear constantes dummy para que la API funcione
-    class mt5_constants:
+    class MT5Constants:
         ORDER_TYPE_BUY = 0
         ORDER_TYPE_SELL = 1
         TRADE_ACTION_DEAL = 1
@@ -38,6 +38,8 @@ except ImportError:
         TIMEFRAME_W1 = 32769
         TIMEFRAME_MN1 = 49153
 
+    mt5_constants = MT5Constants
+
 
 logger = logging.getLogger(__name__)
 
@@ -49,12 +51,24 @@ mt5_client = None
 async def lifespan(app: FastAPI):
     """Manage MT5 connection lifecycle"""
     global mt5_client
-    mt5_client = MetaTrader5(host="localhost", port=18812)
-    if not mt5_client.initialize():
-        logger.error("Failed to initialize MT5 connection")
+    if MT5_AVAILABLE and MetaTrader5:
+        try:
+            mt5_client = MetaTrader5(host="localhost", port=18812)
+            if not mt5_client.initialize():
+                logger.error("Failed to initialize MT5 connection")
+                mt5_client = None
+        except Exception as e:
+            logger.error(f"Failed to create MT5 client: {e}")
+            mt5_client = None
+    else:
+        logger.warning("MetaTrader5 module not available, API will run in limited mode")
+        mt5_client = None
     yield
     if mt5_client:
-        mt5_client.shutdown()
+        try:
+            mt5_client.shutdown()
+        except Exception:
+            pass
 
 
 # Create FastAPI app
