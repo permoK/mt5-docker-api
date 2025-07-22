@@ -82,5 +82,6 @@ class MT5Settings(BaseSettings):
         env_file = ".env"
         case_sensitive = False
 
+
 # Instancia global de configuración
 settings = MT5Settings()

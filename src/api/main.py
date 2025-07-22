@@ -42,6 +42,7 @@ logger = logging.getLogger(__name__)
 # Global MT5 connection
 mt5_client = None
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage MT5 connection lifecycle"""
@@ -70,6 +71,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # Pydantic models
 class AccountInfo(BaseModel):
     login: int
@@ -83,6 +85,7 @@ class AccountInfo(BaseModel):
     name: str = Field(default="")
     company: str = Field(default="")
 
+
 class SymbolInfo(BaseModel):
     name: str
     description: str
@@ -95,6 +98,7 @@ class SymbolInfo(BaseModel):
     volume_max: float
     volume_step: float
 
+
 class OrderRequest(BaseModel):
     symbol: str
     volume: float
@@ -106,6 +110,7 @@ class OrderRequest(BaseModel):
     magic: int = 0
     comment: str = "API Order"
 
+
 class OrderResponse(BaseModel):
     ticket: int
     symbol: str
@@ -115,12 +120,14 @@ class OrderResponse(BaseModel):
     profit: float = 0.0
     status: str
 
+
 class HistoryRequest(BaseModel):
     symbol: str
     timeframe: str = "M1"  # M1, M5, M15, M30, H1, H4, D1, W1, MN1
     start: datetime
     end: datetime
     count: Optional[int] = 1000
+
 
 class Candle(BaseModel):
     time: datetime
@@ -131,16 +138,19 @@ class Candle(BaseModel):
     volume: int
     spread: int
 
+
 # Health check
 @app.get("/health")
 async def health_check():
     """Check API and MT5 connection health"""
     mt5_status = mt5_client.terminal_info() if mt5_client else None
+
     return {
         "status": "healthy" if mt5_status else "unhealthy",
         "mt5_connected": bool(mt5_status),
         "terminal_info": mt5_status._asdict() if mt5_status else None
     }
+
 
 # Account endpoints
 @app.get("/account", response_model=AccountInfo)
@@ -166,6 +176,7 @@ async def get_account_info():
         company=account.company
     )
 
+
 # Symbol endpoints
 @app.get("/symbols")
 async def get_symbols():
@@ -178,6 +189,7 @@ async def get_symbols():
         return []
 
     return [s.name for s in symbols if s.visible]
+
 
 @app.get("/symbol/{symbol}", response_model=SymbolInfo)
 async def get_symbol_info(symbol: str):
@@ -205,6 +217,7 @@ async def get_symbol_info(symbol: str):
         volume_max=info.volume_max,
         volume_step=info.volume_step
     )
+
 
 # Trading endpoints
 @app.post("/order", response_model=OrderResponse)
@@ -265,6 +278,7 @@ async def place_order(request: OrderRequest):
         status="executed"
     )
 
+
 @app.get("/positions")
 async def get_positions():
     """Get all open positions"""
@@ -292,6 +306,7 @@ async def get_positions():
         }
         for pos in positions
     ]
+
 
 @app.delete("/position/{ticket}")
 async def close_position(ticket: int):
@@ -329,6 +344,7 @@ async def close_position(ticket: int):
         raise HTTPException(status_code=400, detail=error_msg)
 
     return {"status": "closed", "ticket": ticket}
+
 
 # History endpoints
 @app.post("/history/candles", response_model=List[Candle])
@@ -382,6 +398,7 @@ async def get_candles(request: HistoryRequest):
         for rate in rates
     ]
 
+
 # WebSocket for real-time data
 @app.websocket("/ws/ticks/{symbol}")
 async def websocket_ticks(websocket: WebSocket, symbol: str):
@@ -412,6 +429,7 @@ async def websocket_ticks(websocket: WebSocket, symbol: str):
     except Exception as e:
         logger.error(f"WebSocket error: {e}")
         await websocket.close()
+
 
 if __name__ == "__main__":
     import uvicorn

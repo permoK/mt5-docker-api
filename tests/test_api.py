@@ -311,6 +311,7 @@ class TestMT5API(unittest.TestCase):
         # For now, just verify the endpoint exists
         pass
 
+
 class TestAPIModels(unittest.TestCase):
     """Test Pydantic models"""
 
@@ -361,6 +362,7 @@ class TestAPIModels(unittest.TestCase):
         self.assertEqual(order.tp, 1.0950)
         self.assertEqual(order.magic, 12345)
         self.assertEqual(order.comment, "Test order")
+
 
 if __name__ == '__main__':
     unittest.main()

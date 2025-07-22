@@ -31,13 +31,12 @@ except ImportError:
         def __init__(self, settings):
             self.settings = settings
 
+
 class TestMT5Settings(unittest.TestCase):
     """Test Pydantic settings validation"""
 
     def test_default_settings(self):
         """Test default settings are valid"""
-
-
         settings = MT5Settings()
         self.assertEqual(settings.wine_prefix, "/config/.wine")
         self.assertEqual(settings.mt5_port, 8001)
@@ -72,6 +71,7 @@ class TestMT5Settings(unittest.TestCase):
         settings = MT5Settings(wine_prefix="/test/wine")
         self.assertEqual(settings.get_cache_dir(), Path("/test/.cache"))
 
+
 class TestGracefulKiller(unittest.TestCase):
     """Test signal handling"""
 
@@ -91,6 +91,7 @@ class TestGracefulKiller(unittest.TestCase):
 
         killer._handle_signal(signal.SIGTERM, None)
         self.assertTrue(killer.kill_now)
+
 
 class TestMT5Installer(unittest.TestCase):
     """Test MT5 installer functionality"""
@@ -292,6 +293,7 @@ class TestMT5Installer(unittest.TestCase):
 
         # Check terminated process was not touched
         proc2.terminate.assert_not_called()
+
 
 if __name__ == '__main__':
     unittest.main()
