@@ -42,7 +42,6 @@ logger = logging.getLogger(__name__)
 # Global MT5 connection
 mt5_client = None
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage MT5 connection lifecycle"""
@@ -71,7 +70,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 # Pydantic models
 class AccountInfo(BaseModel):
     login: int
@@ -85,7 +83,6 @@ class AccountInfo(BaseModel):
     name: str = Field(default="")
     company: str = Field(default="")
 
-
 class SymbolInfo(BaseModel):
     name: str
     description: str
@@ -97,7 +94,6 @@ class SymbolInfo(BaseModel):
     volume_min: float
     volume_max: float
     volume_step: float
-
 
 class OrderRequest(BaseModel):
     symbol: str
@@ -152,11 +148,11 @@ async def get_account_info():
     """Get current account information"""
     if not mt5_client:
         raise HTTPException(status_code=503, detail="MT5 not connected")
-    
+
     account = mt5_client.account_info()
     if not account:
         raise HTTPException(status_code=404, detail="Account info not available")
-    
+
     return AccountInfo(
         login=account.login,
         server=account.server,
@@ -176,11 +172,11 @@ async def get_symbols():
     """Get all available trading symbols"""
     if not mt5_client:
         raise HTTPException(status_code=503, detail="MT5 not connected")
-    
+
     symbols = mt5_client.symbols_get()
     if not symbols:
         return []
-    
+
     return [s.name for s in symbols if s.visible]
 
 @app.get("/symbol/{symbol}", response_model=SymbolInfo)
@@ -188,15 +184,15 @@ async def get_symbol_info(symbol: str):
     """Get detailed information about a symbol"""
     if not mt5_client:
         raise HTTPException(status_code=503, detail="MT5 not connected")
-    
+
     info = mt5_client.symbol_info(symbol)
     if not info:
         raise HTTPException(status_code=404, detail=f"Symbol {symbol} not found")
-    
+
     tick = mt5_client.symbol_info_tick(symbol)
     if not tick:
         raise HTTPException(status_code=404, detail=f"No tick data for {symbol}")
-    
+
     return SymbolInfo(
         name=info.name,
         description=info.description,
@@ -216,16 +212,16 @@ async def place_order(request: OrderRequest):
     """Place a new trading order"""
     if not mt5_client:
         raise HTTPException(status_code=503, detail="MT5 not connected")
-    
+
     # Prepare order request
     symbol_info = mt5_client.symbol_info(request.symbol)
     if not symbol_info:
         raise HTTPException(status_code=404, detail=f"Symbol {request.symbol} not found")
-    
+
     tick = mt5_client.symbol_info_tick(request.symbol)
     if not tick:
         raise HTTPException(status_code=404, detail=f"No tick data for {request.symbol}")
-    
+
     # Determine order type and price
     if request.order_type.upper() == "BUY":
         order_type = mt5_constants.ORDER_TYPE_BUY
@@ -235,7 +231,7 @@ async def place_order(request: OrderRequest):
         price = tick.bid
     else:
         raise HTTPException(status_code=400, detail="Invalid order type")
-    
+
     # Create order request
     order_request = {
         "action": mt5_constants.TRADE_ACTION_DEAL,
@@ -247,19 +243,19 @@ async def place_order(request: OrderRequest):
         "magic": request.magic,
         "comment": request.comment,
     }
-    
+
     if request.sl:
         order_request["sl"] = request.sl
     if request.tp:
         order_request["tp"] = request.tp
-    
+
     # Send order
     result = mt5_client.order_send(order_request)
-    
+
     if not result or result.retcode != mt5_constants.TRADE_RETCODE_DONE:
         error_msg = result.comment if result else "Order failed"
         raise HTTPException(status_code=400, detail=error_msg)
-    
+
     return OrderResponse(
         ticket=result.order,
         symbol=request.symbol,
@@ -274,11 +270,11 @@ async def get_positions():
     """Get all open positions"""
     if not mt5_client:
         raise HTTPException(status_code=503, detail="MT5 not connected")
-    
+
     positions = mt5_client.positions_get()
     if not positions:
         return []
-    
+
     return [
         {
             "ticket": pos.ticket,
@@ -302,18 +298,18 @@ async def close_position(ticket: int):
     """Close a specific position"""
     if not mt5_client:
         raise HTTPException(status_code=503, detail="MT5 not connected")
-    
+
     position = mt5_client.positions_get(ticket=ticket)
     if not position:
         raise HTTPException(status_code=404, detail="Position not found")
-    
+
     position = position[0]
-    
+
     # Prepare close request
     tick = mt5_client.symbol_info_tick(position.symbol)
     if not tick:
         raise HTTPException(status_code=404, detail="No tick data")
-    
+
     close_request = {
         "action": mt5_constants.TRADE_ACTION_DEAL,
         "position": ticket,
@@ -325,13 +321,13 @@ async def close_position(ticket: int):
         "magic": position.magic,
         "comment": f"Close position {ticket}"
     }
-    
+
     result = mt5_client.order_send(close_request)
-    
+
     if not result or result.retcode != mt5_constants.TRADE_RETCODE_DONE:
         error_msg = result.comment if result else "Failed to close position"
         raise HTTPException(status_code=400, detail=error_msg)
-    
+
     return {"status": "closed", "ticket": ticket}
 
 # History endpoints
@@ -340,7 +336,7 @@ async def get_candles(request: HistoryRequest):
     """Get historical candle data"""
     if not mt5_client:
         raise HTTPException(status_code=503, detail="MT5 not connected")
-    
+
     # Convert timeframe
     timeframe_map = {
         "M1": mt5_constants.TIMEFRAME_M1,
@@ -353,11 +349,11 @@ async def get_candles(request: HistoryRequest):
         "W1": mt5_constants.TIMEFRAME_W1,
         "MN1": mt5_constants.TIMEFRAME_MN1,
     }
-    
+
     timeframe = timeframe_map.get(request.timeframe.upper())
     if not timeframe:
         raise HTTPException(status_code=400, detail="Invalid timeframe")
-    
+
     # Get rates
     rates = mt5_client.copy_rates_range(
         request.symbol,
@@ -365,14 +361,14 @@ async def get_candles(request: HistoryRequest):
         request.start,
         request.end
     )
-    
+
     if rates is None:
         return []
-    
+
     # Limit results if specified
     if request.count and len(rates) > request.count:
         rates = rates[-request.count:]
-    
+
     return [
         Candle(
             time=datetime.fromtimestamp(rate['time']),
@@ -391,13 +387,13 @@ async def get_candles(request: HistoryRequest):
 async def websocket_ticks(websocket: WebSocket, symbol: str):
     """WebSocket endpoint for real-time tick data"""
     await websocket.accept()
-    
+
     try:
         while True:
             if not mt5_client:
                 await websocket.send_json({"error": "MT5 not connected"})
                 break
-            
+
             tick = mt5_client.symbol_info_tick(symbol)
             if tick:
                 await websocket.send_json({
@@ -408,9 +404,9 @@ async def websocket_ticks(websocket: WebSocket, symbol: str):
                     "last": tick.last,
                     "volume": tick.volume
                 })
-            
+
             await asyncio.sleep(0.5)  # Send updates every 500ms
-            
+
     except WebSocketDisconnect:
         logger.info(f"WebSocket disconnected for {symbol}")
     except Exception as e:
