@@ -23,16 +23,13 @@ RUN dpkg --add-architecture i386 && \
     apt-get install -y --install-recommends winehq-stable && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Python packages
-RUN pip install --no-cache-dir \
-    pydantic \
-    python-dotenv \
-    requests \
-    urllib3 \
-    fastapi \
-    uvicorn[standard] \
-    websockets \
-    mt5linux
+# Copy requirements file
+COPY requirements.txt /tmp/requirements.txt
+
+# Install Python packages from requirements and mt5linux separately
+RUN pip install --no-cache-dir -r /tmp/requirements.txt && \
+    pip install --no-cache-dir mt5linux==0.1.* && \
+    rm /tmp/requirements.txt
 
 # Environment variables
 ENV WINEPREFIX=/config/.wine

@@ -1,8 +1,8 @@
 # Core dependencies
 pydantic==1.10.*
 python-dotenv==1.0.*
-requests==2.31.*
-urllib3==2.0.*
+requests==2.32.*
+urllib3==2.2.*
 
 # API dependencies
 fastapi==0.104.*
@@ -10,5 +10,5 @@ uvicorn[standard]==0.24.*
 websockets==12.0
 
 # MT5 dependencies
-mt5linux==0.1.*
+# mt5linux==0.1.*  # Only available when running in Docker/Wine environment
 # Note: MetaTrader5 package is installed in Wine environment

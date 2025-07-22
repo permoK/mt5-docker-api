@@ -5,10 +5,9 @@ FastAPI REST API for MetaTrader5 interaction
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 from datetime import datetime
 import asyncio
-import json
 import logging
 from contextlib import asynccontextmanager
 
@@ -43,6 +42,7 @@ logger = logging.getLogger(__name__)
 # Global MT5 connection
 mt5_client = None
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage MT5 connection lifecycle"""
@@ -71,6 +71,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # Pydantic models
 class AccountInfo(BaseModel):
     login: int
@@ -84,6 +85,7 @@ class AccountInfo(BaseModel):
     name: str = Field(default="")
     company: str = Field(default="")
 
+
 class SymbolInfo(BaseModel):
     name: str
     description: str
@@ -95,6 +97,7 @@ class SymbolInfo(BaseModel):
     volume_min: float
     volume_max: float
     volume_step: float
+
 
 class OrderRequest(BaseModel):
     symbol: str
