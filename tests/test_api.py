@@ -26,7 +26,7 @@ class TestMT5API(unittest.TestCase):
         self.mock_mt5 = Mock()
 
         # Patch global mt5_client
-        patcher = patch('main.mt5_client', self.mock_mt5)
+        patcher = patch('api.main.mt5_client', self.mock_mt5)
         patcher.start()
         self.addCleanup(patcher.stop)
 
@@ -171,9 +171,9 @@ class TestMT5API(unittest.TestCase):
         self.mock_mt5.order_send.return_value = mock_result
 
         # Mock constants
-        with patch('main.mt5_constants.ORDER_TYPE_BUY', 0), \
-             patch('main.mt5_constants.TRADE_ACTION_DEAL', 1), \
-             patch('main.mt5_constants.TRADE_RETCODE_DONE', 10009):
+        with patch('api.main.mt5_constants.ORDER_TYPE_BUY', 0), \
+             patch('api.main.mt5_constants.TRADE_ACTION_DEAL', 1), \
+             patch('api.main.mt5_constants.TRADE_RETCODE_DONE', 10009):
 
             order_request = {
                 "symbol": "EURUSD",
@@ -275,7 +275,7 @@ class TestMT5API(unittest.TestCase):
         self.mock_mt5.copy_rates_range.return_value = mock_rates
 
         # Mock constants
-        with patch('main.mt5_constants.TIMEFRAME_M1', 1):
+        with patch('api.main.mt5_constants.TIMEFRAME_M1', 1):
             request_data = {
                 "symbol": "EURUSD",
                 "timeframe": "M1",
