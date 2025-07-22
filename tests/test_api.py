@@ -12,7 +12,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src', 'api'))
 
-from api.main import app, AccountInfo, OrderRequest
+from api.main import app, AccountInfo, OrderRequest  # noqa: E402
 
 
 class TestMT5API(unittest.TestCase):

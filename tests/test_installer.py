@@ -15,9 +15,9 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'Metatrader'))
 
-from config import MT5Settings
-import signal
-import subprocess
+from config import MT5Settings  # noqa: E402
+import signal  # noqa: E402
+import subprocess  # noqa: E402
 
 # Mock the installer module since it's in Metatrader/start.py
 try:
