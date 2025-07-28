@@ -75,10 +75,7 @@ class MT5Settings(BaseSettings):
         """Obtener directorio de caché"""
         return Path(self.wine_prefix).parent / ".cache"
 
-    model_config = {
-        "env_file": ".env",
-        "case_sensitive": False
-    }
+    model_config = {"env_file": ".env", "case_sensitive": False}
 
 
 # Instancia global de configuración
