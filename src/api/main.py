@@ -405,7 +405,7 @@ async def get_candles(request: HistoryRequest):
 
     # Limit results if specified
     if request.count and len(rates) > request.count:
-        rates = rates[-request.count:]
+        rates = rates[-request.count :]
 
     return [
         Candle(
