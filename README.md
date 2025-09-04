@@ -36,8 +36,8 @@ mkdir mt5-docker && cd mt5-docker
 
 2. Download required files:
 ```bash
-wget https://github.com/jefrnc/mt5-docker-api/docker/docker-compose.yml
-wget https://github.com/jefrnc/mt5-docker-api/.env.example
+wget https://raw.githubusercontent.com/jefrnc/mt5-docker-api/main/docker-compose.yml
+wget https://raw.githubusercontent.com/jefrnc/mt5-docker-api/main/.env.example
 ```
 
 3. Configure environment:
@@ -175,12 +175,12 @@ Access MetaEditor through the MT5 interface for development.
 1. Clone the repository:
 ```bash
 git clone https://github.com/jefrnc/mt5-docker-api
-cd MetaTrader5-Docker-Image
+cd mt5-docker-api
 ```
 
 2. Build the image:
 ```bash
-docker build -f docker/Dockerfile -t metatrader5_vnc:latest .
+docker build -t mt5-docker-api:latest .
 ```
 
 ## System Requirements
