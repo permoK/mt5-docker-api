@@ -2,9 +2,11 @@ version: '3.8'
 
 services:
   mt5-docker-api:
-    image: jsfrnc/mt5-docker-api:latest
-    # For local testing, uncomment the following line and comment the above
-    # image: mt5-docker-api:test
+    # Using local build with fixes
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mt5-docker-api:local
     container_name: mt5-docker-api
     restart: unless-stopped
     ports:
