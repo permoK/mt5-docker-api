@@ -8,9 +8,9 @@ services:
     container_name: mt5-docker-api
     restart: unless-stopped
     ports:
-      - "3000:3000"  # VNC Web Access
-      - "8000:8000"  # REST API
-      - "8001:8001"  # Python MT5 API
+      - "3000:3009"  # VNC Web Access
+      - "8000:8009"  # REST API
+      - "8001:8008"  # Python MT5 API
     volumes:
       - mt5_data:/root/.wine/drive_c/Program Files/MetaTrader 5
       - ./logs:/app/logs
