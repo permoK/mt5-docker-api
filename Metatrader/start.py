@@ -26,8 +26,10 @@ try:
 except ImportError:
     # Usar configuración por defecto si no existe config.py
     class DefaultSettings:
-        wine_prefix = os.environ.get('WINEPREFIX', '/config/.wine')
-        mt5_port = int(os.environ.get('MT5_PORT', '8001'))
+        wine_prefix = os.environ.get('WINEPREFIX', '/root/.wine')
+        wine_version = os.environ.get('WINE_VERSION', 'win10')
+        mt5_port = int(os.environ.get('MT5_PORT', '8011'))
+        mt5_version = os.environ.get('MT5_VERSION', '5.0.36')
         log_level = os.environ.get('LOG_LEVEL', 'INFO')
         max_retries = 3
         download_timeout = 300
@@ -37,13 +39,13 @@ except ImportError:
         python_url = "https://www.python.org/ftp/python/3.9.0/python-3.9.0.exe"
         mt5_download_url = "https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe"
         required_packages = ["MetaTrader5==5.0.36", "mt5linux", "pyxdg"]
-        
+
         def get_cache_dir(self):
             return Path(self.wine_prefix).parent / ".cache"
-        
+
         def dict(self):
             return {k: v for k, v in self.__dict__.items() if not k.startswith('_')}
-    
+
     settings = DefaultSettings()
 
 # Configurar logging
@@ -141,16 +143,21 @@ class MT5Installer:
                 return False
             
             # Verificar caché
-            cache_file = self.cache_dir / dest_path.name
-            cache_metadata = self._get_cache_metadata(url)
-            
-            # Usar caché si existe y es válido
-            if cache_file.exists() and cache_metadata:
-                cache_time = datetime.fromisoformat(cache_metadata.get('timestamp', ''))
-                if datetime.now() - cache_time < timedelta(days=7):
-                    logger.info(f"Usando archivo del caché: {dest_path.name}")
-                    cache_file.rename(dest_path)
-                    return True
+            if self.settings.cache_enabled:
+                cache_file = self.cache_dir / dest_path.name
+                cache_metadata = self._get_cache_metadata(url)
+
+                # Usar caché si existe y es válido
+                if cache_file.exists() and cache_metadata:
+                    try:
+                        cache_time = datetime.fromisoformat(cache_metadata.get('timestamp', ''))
+                        if datetime.now() - cache_time < timedelta(days=self.settings.cache_ttl_days):
+                            logger.info(f"Usando archivo del caché: {dest_path.name}")
+                            import shutil
+                            shutil.copy2(cache_file, dest_path)
+                            return True
+                    except Exception as cache_error:
+                        logger.warning(f"Error usando caché: {cache_error}")
             
             logger.info(f"Descargando {url} a {dest_path}")
             response = self.session.get(
@@ -183,15 +190,25 @@ class MT5Installer:
             if not self._verify_checksum(dest_path, expected):
                 dest_path.unlink()
                 return False
-            
+
             # Guardar en caché
-            cache_file = self.cache_dir / dest_path.name
-            dest_path.link_to(cache_file)
-            self._save_cache_metadata(url, {
-                'timestamp': datetime.now().isoformat(),
-                'checksum': self._calculate_checksum(dest_path)
-            })
-            
+            if self.settings.cache_enabled:
+                try:
+                    cache_file = self.cache_dir / dest_path.name
+                    # Usar hardlink si es posible, sino copiar
+                    try:
+                        cache_file.hardlink_to(dest_path)
+                    except (OSError, AttributeError):
+                        import shutil
+                        shutil.copy2(dest_path, cache_file)
+
+                    self._save_cache_metadata(url, {
+                        'timestamp': datetime.now().isoformat(),
+                        'checksum': self._calculate_checksum(dest_path)
+                    })
+                except Exception as cache_error:
+                    logger.warning(f"No se pudo guardar en caché: {cache_error}")
+
             logger.info(f"Descarga completada: {dest_path}")
             return True
             
