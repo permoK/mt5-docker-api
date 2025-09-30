@@ -45,13 +45,41 @@ ENV WINEPREFIX=/root/.wine
 RUN winecfg || true
 
 # Expose ports
-EXPOSE 5900 6080 8000
+EXPOSE 5900 3010 8010 8011
 
-# Create startup script
+# Make scripts executable
+RUN chmod +x /app/scripts/*.sh /app/start.sh
+
+# Create startup script that cleans up X server locks
 RUN echo '#!/bin/bash\n\
+set -e\n\
+\n\
+# Clean up any stale X server lock files\n\
+rm -f /tmp/.X1-lock /tmp/.X11-unix/X1\n\
+\n\
+# Start Xvfb\n\
 Xvfb :1 -screen 0 1024x768x16 &\n\
-x11vnc -display :1 -nopw -forever &\n\
-websockify --web=/usr/share/novnc/ 6080 localhost:5900 &\n\
-python app.py\n' > /app/start.sh && chmod +x /app/start.sh
+sleep 2\n\
+\n\
+# Start x11vnc\n\
+x11vnc -display :1 -nopw -forever -shared -repeat &\n\
+sleep 1\n\
+\n\
+# Start noVNC\n\
+websockify --web=/usr/share/novnc/ 3010 localhost:5900 &\n\
+\n\
+# Set display environment\n\
+export DISPLAY=:1\n\
+\n\
+# Start Wine and MT5 installation if needed\n\
+if [ ! -f "/root/.wine/drive_c/Program Files/MetaTrader 5/terminal64.exe" ]; then\n\
+    echo "Installing MetaTrader 5..."\n\
+    cd /app/Metatrader\n\
+    python3 start.py\n\
+fi\n\
+\n\
+# Start the FastAPI application\n\
+cd /app\n\
+exec python3 -m uvicorn src.api.main:app --host 0.0.0.0 --port 8010\n' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
-CMD ["/app/start.sh"]
+CMD ["/app/entrypoint.sh"]
