@@ -47,9 +47,6 @@ RUN winecfg || true
 # Expose ports
 EXPOSE 5900 3010 8010 8011
 
-# Make scripts executable
-RUN chmod +x /app/scripts/*.sh /app/start.sh
-
 # Create startup script that cleans up X server locks
 RUN echo '#!/bin/bash\n\
 set -e\n\
