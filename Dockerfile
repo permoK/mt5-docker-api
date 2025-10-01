@@ -79,13 +79,11 @@ websockify --web=/usr/share/novnc/ 3010 localhost:5900 &\n\
 export DISPLAY=:1\n\
 export MT5_PORT=${MT5_PORT:-8011}\n\
 \n\
-# Start Wine and MT5 installation if needed\n\
-if [ ! -f "/root/.wine/drive_c/Program Files/MetaTrader 5/terminal64.exe" ]; then\n\
-    echo "Installing MetaTrader 5..."\n\
-    cd /app/Metatrader\n\
-    python3 start.py\n\
-    cd /app\n\
-fi\n\
+# Always run MT5 setup to ensure packages are installed\n\
+echo "Running MT5 setup..."\n\
+cd /app/Metatrader\n\
+python3 start.py\n\
+cd /app\n\
 \n\
 # Check if MT5 is installed\n\
 if [ -f "/root/.wine/drive_c/Program Files/MetaTrader 5/terminal64.exe" ]; then\n\
