@@ -29,7 +29,7 @@ RUN dpkg --add-architecture i386 && \
 COPY requirements.txt /tmp/requirements.txt
 
 # Install Python packages from requirements
-RUN pip install --no-cache-dir -r /tmp/requirements.txt || true
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
 # Create working directory
 WORKDIR /app
