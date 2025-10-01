@@ -87,10 +87,17 @@ cd /app\n\
 \n\
 # Check if MT5 is installed\n\
 if [ -f "/root/.wine/drive_c/Program Files/MetaTrader 5/terminal64.exe" ]; then\n\
+    # Set Wine environment variables\n\
+    export WINEARCH=win64\n\
+    export WINEPREFIX=/root/.wine\n\
+    export WINEDEBUG=-all\n\
+    \n\
     # Start MT5 terminal\n\
     echo "Starting MT5 terminal..."\n\
-    wine "/root/.wine/drive_c/Program Files/MetaTrader 5/terminal64.exe" &\n\
-    sleep 3\n\
+    cd "/root/.wine/drive_c/Program Files/MetaTrader 5"\n\
+    wine terminal64.exe /portable &\n\
+    sleep 5\n\
+    cd /app\n\
     \n\
     # Start mt5linux server\n\
     echo "Starting mt5linux server on port $MT5_PORT..."\n\
