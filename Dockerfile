@@ -96,7 +96,7 @@ if [ -f "/root/.wine/drive_c/Program Files/MetaTrader 5/terminal64.exe" ]; then\
     \n\
     # Start mt5linux server\n\
     echo "Starting mt5linux server on port $MT5_PORT..."\n\
-    python3 -m mt5linux --host 0.0.0.0 -p $MT5_PORT -w wine python.exe &\n\
+    python3 -m mt5linux --host 0.0.0.0 -p $MT5_PORT -w wine python &\n\
     sleep 5\n\
 else\n\
     echo "WARNING: MT5 not installed, skipping MT5 and mt5linux startup"\n\

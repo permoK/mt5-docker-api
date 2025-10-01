@@ -407,7 +407,7 @@ class MT5Installer:
             "python3", "-m", "mt5linux",
             "--host", "0.0.0.0",
             "-p", str(self.settings.mt5_port),
-            "-w", "wine", "python.exe"
+            "-w", "wine", "python"
         ], background=True)
         
         # Verificar que el servidor esté funcionando
