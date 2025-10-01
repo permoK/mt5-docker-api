@@ -11,5 +11,6 @@ uvicorn[standard]==0.35.*
 websockets==15.0.1
 
 # MT5 dependencies
-# mt5linux==0.1.*  # Only available when running in Docker/Wine environment
-# Note: MetaTrader5 package is installed in Wine environment
+mt5linux
+MetaTrader5==5.0.36
+pyxdg

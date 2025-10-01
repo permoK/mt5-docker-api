@@ -81,17 +81,24 @@ if [ ! -f "/root/.wine/drive_c/Program Files/MetaTrader 5/terminal64.exe" ]; the
     echo "Installing MetaTrader 5..."\n\
     cd /app/Metatrader\n\
     python3 start.py\n\
+    cd /app\n\
 fi\n\
 \n\
-# Start MT5 terminal\n\
-echo "Starting MT5 terminal..."\n\
-wine "/root/.wine/drive_c/Program Files/MetaTrader 5/terminal64.exe" &\n\
-sleep 3\n\
-\n\
-# Start mt5linux server\n\
-echo "Starting mt5linux server on port $MT5_PORT..."\n\
-python3 -m mt5linux --host 0.0.0.0 -p $MT5_PORT -w wine python.exe &\n\
-sleep 5\n\
+# Check if MT5 is installed\n\
+if [ -f "/root/.wine/drive_c/Program Files/MetaTrader 5/terminal64.exe" ]; then\n\
+    # Start MT5 terminal\n\
+    echo "Starting MT5 terminal..."\n\
+    wine "/root/.wine/drive_c/Program Files/MetaTrader 5/terminal64.exe" &\n\
+    sleep 3\n\
+    \n\
+    # Start mt5linux server\n\
+    echo "Starting mt5linux server on port $MT5_PORT..."\n\
+    python3 -m mt5linux --host 0.0.0.0 -p $MT5_PORT -w wine python.exe &\n\
+    sleep 5\n\
+else\n\
+    echo "WARNING: MT5 not installed, skipping MT5 and mt5linux startup"\n\
+    echo "API will run in limited mode"\n\
+fi\n\
 \n\
 # Start the FastAPI application\n\
 echo "Starting FastAPI application..."\n\
