@@ -9,6 +9,7 @@ from typing import List, Optional
 from datetime import datetime
 import asyncio
 import logging
+import os
 from contextlib import asynccontextmanager
 
 try:
@@ -53,10 +54,18 @@ async def lifespan(app: FastAPI):
     global mt5_client
     if MT5_AVAILABLE and MetaTrader5:
         try:
-            mt5_client = MetaTrader5(host="localhost", port=18812)
+            # Get MT5 port from environment variable, default to 8011
+            mt5_port = int(os.environ.get('MT5_PORT', '8011'))
+            mt5_host = os.environ.get('MT5_HOST', 'localhost')
+
+            logger.info(f"Connecting to MT5 at {mt5_host}:{mt5_port}")
+            mt5_client = MetaTrader5(host=mt5_host, port=mt5_port)
+
             if not mt5_client.initialize():
                 logger.error("Failed to initialize MT5 connection")
                 mt5_client = None
+            else:
+                logger.info("MT5 connection initialized successfully")
         except Exception as e:
             logger.error(f"Failed to create MT5 client: {e}")
             mt5_client = None
