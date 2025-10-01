@@ -412,12 +412,25 @@ class MT5Installer:
         
         # Verificar que el servidor esté funcionando
         time.sleep(5)
-        result = self.run_command(["ss", "-tuln"], check=False)
-        
-        if result and f":{self.settings.mt5_port}" in result.stdout:
-            logger.info(f"Servidor mt5linux funcionando en puerto {self.settings.mt5_port}")
-        else:
-            logger.error("No se pudo verificar el servidor mt5linux")
+
+        # Try to verify the server is running (optional)
+        try:
+            # Try ss first, then netstat, then skip verification
+            result = None
+            for cmd in [["ss", "-tuln"], ["netstat", "-tuln"], ["lsof", "-i", f":{self.settings.mt5_port}"]]:
+                try:
+                    result = self.run_command(cmd, check=False)
+                    if result:
+                        break
+                except FileNotFoundError:
+                    continue
+
+            if result and f":{self.settings.mt5_port}" in result.stdout:
+                logger.info(f"Servidor mt5linux funcionando en puerto {self.settings.mt5_port}")
+            else:
+                logger.warning(f"No se pudo verificar el servidor mt5linux (puerto {self.settings.mt5_port}), pero puede estar funcionando")
+        except Exception as e:
+            logger.warning(f"No se pudo verificar el estado del servidor: {e}")
     
     def cleanup(self):
         """Limpiar procesos al terminar"""

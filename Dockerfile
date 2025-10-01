@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     novnc \
     supervisor \
     net-tools \
+    iproute2 \
     lsb-release \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
