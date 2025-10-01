@@ -1,4 +1,4 @@
-FROM python:3.13-slim-bookworm
+FROM python:3.11-slim-bookworm
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -27,6 +27,9 @@ RUN dpkg --add-architecture i386 && \
 
 # Copy requirements file
 COPY requirements.txt /tmp/requirements.txt
+
+# Show requirements for debugging
+RUN cat /tmp/requirements.txt
 
 # Install Python packages from requirements
 RUN pip install --no-cache-dir -r /tmp/requirements.txt

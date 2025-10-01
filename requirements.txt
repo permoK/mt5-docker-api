@@ -11,7 +11,7 @@ uvicorn[standard]==0.35.*
 websockets==15.0.1
 
 # MT5 dependencies
-mt5linux
+mt5linux>=0.1.6
 pyxdg
 # Note: MetaTrader5 package is installed by the MT5 installation script (Metatrader/start.py)
 # It's not available on PyPI for all Python versions
