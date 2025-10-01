@@ -94,10 +94,14 @@ if [ -f "/root/.wine/drive_c/Program Files/MetaTrader 5/terminal64.exe" ]; then\
     \n\
     # Start MT5 terminal\n\
     echo "Starting MT5 terminal..."\n\
-    cd "/root/.wine/drive_c/Program Files/MetaTrader 5"\n\
-    wine terminal64.exe /portable &\n\
+    echo "Wine version: $(wine --version)"\n\
+    echo "MT5 path: /root/.wine/drive_c/Program Files/MetaTrader 5/terminal64.exe"\n\
+    \n\
+    # Try starting MT5 with full path\n\
+    DISPLAY=:1 wine "C:\\\\Program Files\\\\MetaTrader 5\\\\terminal64.exe" &\n\
+    MT5_PID=$!\n\
+    echo "MT5 started with PID: $MT5_PID"\n\
     sleep 5\n\
-    cd /app\n\
     \n\
     # Start mt5linux server\n\
     echo "Starting mt5linux server on port $MT5_PORT..."\n\

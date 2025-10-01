@@ -453,13 +453,12 @@ class MT5Installer:
             Path(self.settings.wine_prefix).mkdir(parents=True, exist_ok=True)
             
             # Pasos de instalación
+            # Note: MT5 and mt5linux will be started by the entrypoint script
             steps = [
                 self.install_mono,
                 self.install_mt5,
                 self.install_python_wine,
-                self.install_python_packages,
-                self.start_mt5,
-                self.start_mt5_server
+                self.install_python_packages
             ]
             
             for step in steps:
