@@ -470,10 +470,7 @@ class MT5Installer:
             
             if not self.killer.kill_now:
                 logger.info("=== Instalación completada ===")
-                
-                # Mantener el proceso vivo
-                while not self.killer.kill_now:
-                    time.sleep(1)
+                # Exit to allow entrypoint to continue
             
         except Exception as e:
             logger.error(f"Error durante la instalación: {e}")
